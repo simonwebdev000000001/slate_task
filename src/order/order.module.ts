@@ -5,12 +5,16 @@ import { OrderService } from './order.service';
 import {AccessMiddleware} from '../middleware/auth';
 
 import { orderProviders } from './order.providers';
+import {NotFoundController} from "../not_found/not.found.controller";
 
 @Module({
   imports: [
     DatabaseModule
   ],
-  controllers: [OrderController],
+  controllers: [
+      OrderController,
+      NotFoundController
+  ],
   providers: [OrderService,...orderProviders],
 })
 export class OrderModule  implements NestModule  {
