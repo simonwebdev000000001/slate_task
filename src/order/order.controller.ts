@@ -1,7 +1,11 @@
-import {Controller, Get, Post, Body, Res,Req} from '@nestjs/common';
+import {Controller, Get, Post, Put, Param, Body, Res, Req} from '@nestjs/common';
 import {CreateOrderDto} from './dto/create-order.dto';
 import {OrderService} from './order.service';
 import {Order} from './interfaces/order.interface';
+import {Config} from "../config"
+
+var http = require('http');
+var querystring = require('querystring');
 
 @Controller('orders')
 export class OrderController {
@@ -9,21 +13,84 @@ export class OrderController {
     }
 
     @Post()
-    async create(@Res() response,@Req() req,@Body() createCatDto: CreateOrderDto) {
+    async create(@Res() response, @Req() req, @Body() createCatDto: CreateOrderDto) {
         await this.orderService.create(createCatDto);
         response.redirect(req.originalUrl)
+    }
 
+    @Post(':id/cancel')
+    async cancel(@Res() response, @Req() req, @Param() params) {
+        await this.orderService.updateState(params.id);
+        response.redirect('/orders')
+    }
+
+    @Post(':id/status')
+    async status(@Res() res, @Req() req, @Body() body:any,@Param() params) {
+        const data = querystring.stringify(params);
+        const options = {
+            host: '127.0.0.1',
+            port: 3001,
+            path: '',
+            method: 'POST',
+            headers: {
+                'Authorization': body.token,
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(data)
+            }
+        };
+
+        const httpreq = http.request(options, (response) => {
+            response.setEncoding('utf8');
+            let resultState;
+            response.on('data', function (chunk) {
+                resultState = JSON.parse(chunk);
+                if(resultState.statusCode==403){
+                    resultState = false;
+                }else{
+                    resultState = resultState.data;
+                }
+            });
+            response.on('end', async () => {
+                if (resultState) {
+                    await this.orderService.updateState(params.id, resultState);
+                    if (resultState === 'confirmed') {
+                        setTimeout(() => {
+                            this.orderService.updateState(params.id, 'delivered');
+                        }, Config.TIME_OUT_TO_DELIVER)
+                    }
+                }
+                res.redirect('/orders')
+            })
+        });
+        httpreq.write(data);
+        httpreq.end();
+        return
     }
 
     @Get()
     async findAll(@Res() response): Promise<void> {
         this.orderService.findAll().then((orders) => {
             let tbody = '';
-            orders.forEach((order) => {
+            orders.forEach((order: any) => {
                 tbody += `
                         <tr>
                             <td>${order.name}</td>
                             <td>${order.state}</td>
+                            ${order.state == 'created' ? (
+                    `
+                                 <td>
+                                    <form action="/orders/${order._id}/cancel" method="POST">
+                                        <input type="hidden" value="${Config.USER_TOKEN}" name="token"/>
+                                        <input type="submit" value="cancel">
+                                    </form>
+                                    <form action="/orders/${order._id}/status" method="POST">
+                                        <input type="hidden" value="${Config.USER_TOKEN}" name="token"/>
+                                        <input type="submit" value="check status">
+                                    </form>
+                                </td>
+                                `
+                ) : (' <td><button onclick="location.reload()">check status</button></td>')}
+                            
                         </tr>
 `;
             });
@@ -51,6 +118,7 @@ export class OrderController {
                     <tr>
                         <th>Name</th>
                         <th>State</th>
+                        <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>

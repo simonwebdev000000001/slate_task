@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { OrderModule } from './order/order.module';
-import { PaymentModule } from './payment/app.module';
+import { PaymentModule } from './payment/payment.module';
 
 async function bootstrap() {
   const order = await NestFactory.create(OrderModule);

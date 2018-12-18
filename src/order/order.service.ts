@@ -11,12 +11,11 @@ export class OrderService {
     const createdCat = new this.itemModel(createCatDto);
     return await createdCat.save();
   }
+  async updateState(id: String,state:String='canceled'): Promise<Order> {
+    return await this.itemModel.update({_id:id},{$set:{state}}).exec();
+  }
 
   async findAll(): Promise<Order[]> {
     return await this.itemModel.find().exec();
-  }
-
-  getHello():string{
-    return 'HELLO r';
   }
 }
