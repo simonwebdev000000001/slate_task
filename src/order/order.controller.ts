@@ -23,11 +23,29 @@ export class OrderController {
                 tbody += `
                         <tr>
                             <td>${order.name}</td>
+                            <td>${order.state}</td>
                         </tr>
 `;
             });
             response.writeHeader(200, {"Content-Type": "text/html"});
             response.write(`
+                <style>
+                    table {
+                      font-family: arial, sans-serif;
+                      border-collapse: collapse;
+                      width: 100%;
+                    }
+                    
+                    td, th {
+                      border: 1px solid #dddddd;
+                      text-align: left;
+                      padding: 8px;
+                    }
+                    
+                    tr:nth-child(even) {
+                      background-color: #dddddd;
+                    }
+                </style>
                 <table>
                   <thead>
                     <tr>

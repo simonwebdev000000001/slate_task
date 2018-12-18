@@ -1,4 +1,4 @@
 export class CreateOrderDto {
     readonly name: string;
-    readonly state: number;
+    readonly state: string;
 }
