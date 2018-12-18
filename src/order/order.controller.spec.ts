@@ -1,21 +1,34 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import {INestApplication} from '@nestjs/common';
+
+import * as request from 'supertest';
 import { OrderController } from './order.controller';
-import { OrderService } from './order.service';
+import { OrderModule } from './order.module';
 
-describe('AppController', () => {
-  let app: TestingModule;
 
-  beforeAll(async () => {
-    app = await Test.createTestingModule({
-      controllers: [OrderController],
-      providers: [OrderService],
-    }).compile();
-  });
+function createTestModule() {
+  return Test.createTestingModule({
+    imports: [OrderModule],
+    providers: [],
+  }).compile();
+}
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      const appController = app.get<OrderController>(OrderController);
-      expect(appController.getHello()).toBe('Hello World!');
+
+
+  describe('OrderController', () => {
+    let app: INestApplication;
+
+    beforeAll(async () => {
+      app = (await createTestModule()).createNestApplication();
+
+      await app.init();
+    });
+
+    describe('POST payment without Authorization', () => {
+      it('should return "403"', () => {
+        return request(app.getHttpServer())
+            .get('/orders')
+            .expect(200);
+      });
     });
   });
-});
