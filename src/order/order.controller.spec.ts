@@ -24,11 +24,19 @@ function createTestModule() {
       await app.init();
     });
 
-    describe('POST payment without Authorization', () => {
-      it('should return "403"', () => {
+    describe('GET orders', () => {
+      it('should return "200"', () => {
         return request(app.getHttpServer())
             .get('/orders')
             .expect(200);
+      });
+    });
+    describe('POST create order', () => {
+      it('should return "302"', () => {
+        return request(app.getHttpServer())
+            .post('/orders')
+            .send({name:'test'})
+            .expect(302);
       });
     });
   });
